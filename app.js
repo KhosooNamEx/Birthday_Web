@@ -1,4 +1,4 @@
-// Single-page app with white background + realistic doves
+// Read-only wishes version (XML/TXT import) + doves + mic-blow cake
 const cfg = window.BDAY_CONFIG;
 const canvas = document.getElementById('cake');
 const ctx = canvas.getContext('2d');
@@ -15,15 +15,13 @@ let revealed = false;
 
 // --- Doves ---
 function spawnDoves(){
-  // Create 6 doves with varying top positions, durations, and delays
   const count = 6;
   for(let i=0;i<count;i++){
     const d = document.createElement('div');
     d.className = 'dove';
     d.style.top = `${10 + i*12 + (Math.random()*6-3)}vh`;
     d.style.animationDuration = `${24 + Math.random()*10}s`;
-    d.style.animationDelay = `${Math.random()*-20}s`; // negative = already in-flight
-    // Use embed SVG
+    d.style.animationDelay = `${Math.random()*-20}s`;
     const img = document.createElement('img');
     img.src = 'assets/dove.svg';
     img.alt = 'flying dove';
@@ -143,9 +141,67 @@ window.addEventListener('load', ()=>{
   spawnDoves();
 });
 
-// ------- Gallery + per-image wishes -------
+// ------- Gallery + read-only wishes -------
 const memRoot = document.getElementById('memories');
-const LS_KEY = 'bday_mem_wishes';
+
+function decode(txt){ try { return decodeURIComponent(txt); } catch { return txt; } }
+
+async function loadWishes(){
+  // Prefer XML
+  try{
+    const res = await fetch('assets/wishes.xml', {cache:'no-store'});
+    if(res.ok){
+      const xml = await res.text();
+      const dom = new DOMParser().parseFromString(xml, 'text/xml');
+      const nodes = Array.from(dom.querySelectorAll('wish'));
+      return nodes.map((n, i)=> ({
+        index: parseInt(n.getAttribute('index') ?? i, 10),
+        who: (n.querySelector('who')?.textContent || '').trim(),
+        msg: (n.querySelector('msg')?.textContent || '').trim()
+      }));
+    }
+  }catch(e){ /* fall through */ }
+
+  // Fallback: line-based TXT => "who|message"
+  try{
+    const res = await fetch('assets/wishes.txt', {cache:'no-store'});
+    if(res.ok){
+      const t = await res.text();
+      return t.split(/\r?\n/).filter(Boolean).map((line, i)=>{
+        const [who, msg] = line.split('|');
+        return { index: i, who: (who||'').trim(), msg: (msg||'').trim() };
+      });
+    }
+  }catch(e){ /* nothing */ }
+
+  return []; // none
+}
+
+function cardTemplate(idx, src, left, wish){
+  const sideA = left ? 'mem-img' : 'mem-wish';
+  const sideB = left ? 'mem-wish' : 'mem-img';
+  const wishHTML = `
+    <div class="wish-text">${(wish?.msg || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    <div class="who">${wish?.who ? '— ' + wish.who : ''}</div>
+  `;
+  return `
+    <article class="mem-card" data-idx="${idx}">
+      <div class="${sideA}">${ left ? `<img src="${src}" alt="memory ${idx+1}">` : wishHTML }</div>
+      <div class="${sideB}">${ left ? wishHTML : `<img src="${src}" alt="memory ${idx+1}">` }</div>
+    </article>
+  `;
+}
+
+async function buildMemories(){
+  memRoot.innerHTML = '';
+  const wishes = await loadWishes();
+  const arr = cfg.PHOTOS.slice(0,10);
+  arr.forEach((src, i)=>{
+    const leftImage = i % 2 === 0; // alternate left/right
+    const w = wishes.find(w=> w.index === i) || wishes[i] || { who:'', msg:'' };
+    memRoot.insertAdjacentHTML('beforeend', cardTemplate(i, src, leftImage, w));
+  });
+}
 
 function revealGallery(){
   hint.textContent = 'Make a wish, Michuka! Now scroll down for memories 🎉';
@@ -156,76 +212,4 @@ function revealGallery(){
     document.querySelector('a[href="#gallery"]').classList.add('active');
     document.getElementById('gallery').scrollIntoView({behavior:'smooth'});
   }, 350);
-}
-
-function readAll(){
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; }
-}
-function writeAll(obj){
-  localStorage.setItem(LS_KEY, JSON.stringify(obj));
-}
-function cardTemplate(idx, src, left){
-  const sideA = left ? 'mem-img' : 'mem-wish';
-  const sideB = left ? 'mem-wish' : 'mem-img';
-  return `
-    <article class="mem-card" data-idx="${idx}">
-      <div class="${sideA}">${ left ? `<img src="${src}" alt="memory ${idx+1}">` : wishBox(idx) }</div>
-      <div class="${sideB}">${ left ? wishBox(idx) : `<img src="${src}" alt="memory ${idx+1}">` }</div>
-    </article>
-  `;
-}
-function wishBox(idx){
-  const store = readAll();
-  const saved = store[idx]?.msg || '';
-  const who = store[idx]?.who || '';
-  return `
-    <label class="small">Your wish for memory #${idx+1}</label>
-    <textarea id="msg-${idx}" placeholder="Write a sweet message...">${saved}</textarea>
-    <div class="mem-actions">
-      <input id="who-${idx}" placeholder="Your name (optional)" value="${who}"/>
-      <button class="btn" onclick="saveWish(${idx})">Save</button>
-      <button class="btn secondary" onclick="clearWish(${idx})">Clear</button>
-    </div>
-    <div id="meta-${idx}" class="small"></div>
-  `;
-}
-window.saveWish = function(idx){
-  const msg = document.getElementById('msg-'+idx).value.trim();
-  const who = document.getElementById('who-'+idx).value.trim();
-  const all = readAll();
-  all[idx] = { msg, who, ts: Date.now() };
-  writeAll(all);
-  const dt = new Date(all[idx].ts).toLocaleString();
-  document.getElementById('meta-'+idx).textContent = (msg?`Saved by ${who||'Anonymous'} • ${dt}`:'(empty)');
-}
-window.clearWish = function(idx){
-  const all = readAll();
-  delete all[idx];
-  writeAll(all);
-  document.getElementById('msg-'+idx).value='';
-  document.getElementById('who-'+idx).value='';
-  document.getElementById('meta-'+idx).textContent='';
-}
-
-function buildMemories(){
-  memRoot.innerHTML = '';
-  const arr = cfg.PHOTOS.slice(0,10);
-  arr.forEach((src, i)=>{
-    const leftImage = i % 2 === 0; // alternate left/right
-    memRoot.insertAdjacentHTML('beforeend', cardTemplate(i, src, leftImage));
-  });
-  // Restore saved meta display
-  const all = readAll();
-  for(const k in all){
-    const idx = parseInt(k,10);
-    if(!isNaN(idx)){
-      const dt = new Date(all[k].ts).toLocaleString();
-      const meta = document.getElementById('meta-'+idx);
-      const msgEl = document.getElementById('msg-'+idx);
-      const whoEl = document.getElementById('who-'+idx);
-      if(meta){ meta.textContent = `Saved by ${all[k].who||'Anonymous'} • ${dt}`; }
-      if(msgEl){ msgEl.value = all[k].msg || ''; }
-      if(whoEl){ whoEl.value = all[k].who || ''; }
-    }
-  }
 }

@@ -43,7 +43,7 @@
     <!-- Revealed after candles are blown -->
     <section id="gallery" class="main-card hidden">
       <h2>📸 Memories & Wishes for Michuka</h2>
-      <p class="subtitle">After blowing the candles, scroll through 10 memories. Leave a little wish next to each one 💌</p>
+      <p class="subtitle">After blowing the candles, scroll through 10 memories with pre-written wishes 💌</p>
 
       <div id="memories">
         <!-- Cards injected by app.js -->
@@ -52,11 +52,11 @@
 
     <section id="about" class="main-card">
       <h2>About this page</h2>
-      <p class="subtitle">A single-page celebration hosted on GitHub Pages. No servers — wishes are saved in your browser only.</p>
+      <p class="subtitle">Wishes are read-only and loaded from <code>assets/wishes.xml</code> (or <code>wishes.txt</code> fallback).</p>
       <ul class="bullets">
         <li>Voice “blow” detection uses the Web Audio API (mic permission required).</li>
         <li>Gallery reveals only after the candles go out.</li>
-        <li>Each memory has a personal wish area; your message stays on your device (localStorage).</li>
+        <li>Edit wishes by committing a new XML/TXT file — no edits from the web UI.</li>
       </ul>
     </section>
   </main>

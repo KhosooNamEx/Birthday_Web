@@ -39,9 +39,8 @@ body{
 .mem-card:nth-child(even) .mem-img{ order: 2 }
 .mem-card:nth-child(even) .mem-wish{ order: 1 }
 .mem-img img{ width:100%; height: 320px; object-fit:cover; border-radius:12px; border:1px solid var(--line); box-shadow: var(--shadow) }
-.mem-wish textarea{ width:100%; min-height: 120px; border-radius:10px; background:#f5f7ff; color:var(--text);
-  border:1px solid rgba(20,24,38,.15); padding:10px; resize:vertical }
-.mem-actions{ display:flex; gap:8px; margin-top:8px }
+.mem-wish .wish-text{ white-space: pre-wrap; line-height:1.55 }
+.mem-wish .who{ margin-top:6px; color:var(--muted); font-size:.9rem }
 .small{font-size:.9rem;color:var(--muted)}
 .bullets{color:var(--muted)}
 @media (max-width: 900px){
@@ -53,7 +52,6 @@ body{
 .doves{
   position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none;
 }
-/* Each dove is absolutely positioned and animated */
 .dove{
   position: absolute; top: 0; left: -10vw; width: clamp(60px, 10vw, 120px);
   filter: drop-shadow(0 6px 10px rgba(0,0,0,.15));
@@ -65,7 +63,6 @@ body{
   50%  { transform: translateX(55vw) translateY(-4vh) scale(1.02) }
   100% { transform: translateX(120vw) translateY(2vh) scale(1) }
 }
-/* Gentle wing flap using subtle scale/skew */
 .dove img, .dove svg {
   display:block; width:100%; height:auto;
   animation: flap 1.6s ease-in-out infinite;
@@ -75,8 +72,6 @@ body{
   0%,100% { transform: scaleY(1) }
   50%     { transform: scaleY(0.96) }
 }
-
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce){
   .dove, .dove img, .dove svg { animation: none !important }
 }
