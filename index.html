@@ -3,48 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Happy Birthday — Home</title>
+  <title>Happy Birthday — Michuka</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="nav">
+  <header class="nav">
     <div class="inner container">
       <div class="brand">🎂 Happy Birthday</div>
       <nav class="row" id="nav-links">
-        <a href="index.html" class="active">Home</a>
-        <a href="gallery.html">Gallery</a>
-        <a href="wishes.html">Wishes</a>
-        <a href="games.html">Games</a>
-        <a href="about.html">About</a>
+        <a href="#top" class="active">Home</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#about">About</a>
       </nav>
     </div>
-  </div>
+  </header>
 
-  <main class="container">
-    <section class="main-card center">
+  <main id="top" class="container">
+    <section class="hero main-card">
       <img class="hero-img" src="assets/happy_michuka.svg" alt="Happy Birthday Michuka">
-      <p class="subtitle">Blow out the candles with your voice. We’ll ask for microphone permission now.</p>
+      <p class="subtitle">Blow out the candles with your voice. We’ll ask for microphone permission on load.</p>
 
       <div class="cake-wrap">
-        <canvas id="cake" width="720" height="380" aria-label="Interactive birthday cake"></canvas>
+        <canvas id="cake" width="900" height="420" aria-label="Interactive birthday cake"></canvas>
       </div>
 
-      <div class="row" style="justify-content:center;margin-top:10px">
-        <button id="relight" class="btn secondary">Relight Candles</button>
-      </div>
-
-      <div id="mic-status" class="small" style="text-align:center;margin-top:8px">
+      <div id="mic-status" class="small center" style="margin-top:8px">
         Microphone: <strong>requesting…</strong>
       </div>
 
       <div class="row center-links" style="margin-top:18px">
-        <a class="btn" href="gallery.html">🎈 View Gallery</a>
-        <a class="btn secondary" href="wishes.html">💌 Wishes Wall</a>
-        <a class="btn" href="games.html">🎮 Mini Games</a>
+        <button id="relight" class="btn secondary">Relight Candles</button>
       </div>
+      <div id="reveal-hint" class="hint hidden">Make a wish… 🎉</div>
+    </section>
+
+    <!-- Revealed after candles are blown -->
+    <section id="gallery" class="main-card hidden">
+      <h2>📸 Memories & Wishes for Michuka</h2>
+      <p class="subtitle">After blowing the candles, scroll through 10 memories. Leave a little wish next to each one 💌</p>
+
+      <div id="memories">
+        <!-- Cards injected by app.js -->
+      </div>
+    </section>
+
+    <section id="about" class="main-card">
+      <h2>About this page</h2>
+      <p class="subtitle">A single-page celebration hosted on GitHub Pages. No servers — wishes are saved in your browser only.</p>
+      <ul class="bullets">
+        <li>Voice “blow” detection uses the Web Audio API (mic permission required).</li>
+        <li>Gallery reveals only after the candles go out.</li>
+        <li>Each memory has a personal wish area; your message stays on your device (localStorage).</li>
+      </ul>
     </section>
   </main>
 
-  <script src="cake.js"></script>
+  <script>
+    // Simple inlined config
+    window.BDAY_CONFIG = {
+      NAME: "Michuka",
+      PHOTOS: [
+        "assets/photo1.jpg","assets/photo2.jpg","assets/photo3.jpg","assets/photo4.jpg","assets/photo5.jpg",
+        "assets/photo6.jpg","assets/photo7.jpg","assets/photo8.jpg","assets/photo9.jpg","assets/photo10.jpg"
+      ]
+    };
+  </script>
+  <script src="app.js"></script>
 </body>
 </html>

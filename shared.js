@@ -1,6 +1,6 @@
 // ---- Global personalization ----
 const CONFIG = {
-  NAME: "Your Friend",                    // shown on pages
+  NAME: "Khosoo",                    // shown on pages
   PHOTOS: [
     "assets/photo1.jpg",
     "assets/photo2.jpg",
