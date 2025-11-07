@@ -7,9 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Doves background layer -->
   <div class="doves" aria-hidden="true" id="doves-layer"></div>
-  <!-- Fireworks overlay -->
   <canvas id="fireworks" class="fireworks" width="1920" height="1080" aria-hidden="true"></canvas>
 
   <header class="nav">
@@ -37,34 +35,28 @@
       </div>
 
       <div class="row center-links" style="margin-top:18px">
-        <button id="relight" class="btn secondary">Relight Candles</button>
+        <button id="relight" class="btn secondary">Relight Candles</</button>
       </div>
       <div id="reveal-hint" class="hint hidden">Make a wish… 🎉</div>
     </section>
 
-    <!-- Revealed after candles are blown -->
     <section id="gallery" class="main-card hidden">
       <h2>📸 Memories & Wishes for Michuka</h2>
       <p class="subtitle">After blowing the candles, scroll through 10 memories with pre-written wishes 💌</p>
-
-      <div id="memories">
-        <!-- Cards injected by app.js -->
-      </div>
+      <div id="memories"></div>
     </section>
 
     <section id="about" class="main-card">
       <h2>About this page</h2>
       <p class="subtitle">Wishes are read-only and loaded from <code>assets/wishes.xml</code> (or <code>wishes.txt</code> fallback).</p>
       <ul class="bullets">
-        <li>Voice “blow” detection uses the Web Audio API (mic permission required).</li>
-        <li>Gallery reveals only after the candles go out, with a fireworks salute.</li>
-        <li>Edit wishes by committing a new XML/TXT file — no edits from the web UI.</li>
+        <li>Fireworks salute runs once, then fully disappears (no residue).</li>
+        <li>Voice “blow” detection uses the Web Audio API.</li>
       </ul>
     </section>
   </main>
 
   <script>
-    // Simple inlined config
     window.BDAY_CONFIG = {
       NAME: "Michuka",
       PHOTOS: [

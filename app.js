@@ -1,4 +1,4 @@
-// Read-only wishes + doves + mic-blow cake + FIREWORKS
+// Fireworks full-clear fix + read-only wishes + doves + mic-blow cake
 const cfg = window.BDAY_CONFIG;
 const canvas = document.getElementById('cake');
 const ctx = canvas.getContext('2d');
@@ -15,13 +15,17 @@ let flame = 1.0;            // 1 = full flame, 0 = out
 let analyser, data;
 let revealed = false;
 
-// Handle fireworks canvas resize
+// --- DPR-aware sizing ---
 function sizeFireworks(){
-  fwCanvas.width = innerWidth * devicePixelRatio;
-  fwCanvas.height = innerHeight * devicePixelRatio;
-  fwCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  fwCanvas.width = Math.floor(innerWidth * dpr);
+  fwCanvas.height = Math.floor(innerHeight * dpr);
+  fwCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-window.addEventListener('resize', sizeFireworks); sizeFireworks();
+window.addEventListener('resize', sizeFireworks);
+window.addEventListener('orientationchange', sizeFireworks);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sizeFireworks(); });
+sizeFireworks();
 
 // --- Doves ---
 function spawnDoves(){
@@ -82,7 +86,7 @@ function drawCake(){
     ctx.fillRect(x-1, cy-66, 2, 8);
     // flame
     if(flame>0){
-      const f = flame * (0.9 + Math.random()*0.2); // flicker
+      const f = flame * (0.9 + Math.random()*0.2);
       const grad = ctx.createRadialGradient(x, cy-78, 2, x, cy-78, 14*f);
       grad.addColorStop(0,'rgba(255,240,150,0.95)');
       grad.addColorStop(1,'rgba(255,120,60,0)');
@@ -97,16 +101,12 @@ function drawCake(){
   if(allOut && !revealed){
     revealed = true;
     revealGallery();
-    startFireworks();  // 🎆 trigger fireworks
+    startFireworks();
   }
   requestAnimationFrame(drawCake);
 }
 
-function rms(buf){
-  let s=0;
-  for(let i=0;i<buf.length;i++){ s += buf[i]*buf[i]; }
-  return Math.sqrt(s/buf.length);
-}
+function rms(buf){ let s=0; for(let i=0;i<buf.length;i++){ s += buf[i]*buf[i]; } return Math.sqrt(s/buf.length); }
 
 async function enableMic(){
   try{
@@ -119,45 +119,33 @@ async function enableMic(){
     src.connect(analyser);
     micStatus.innerHTML = 'Microphone: <strong>on</strong>';
     listen();
-  }catch(e){
-    micStatus.innerHTML = 'Microphone: <strong>blocked</strong> — tap the cake to blow.';
-  }
+  }catch(e){ micStatus.innerHTML = 'Microphone: <strong>blocked</strong> — tap the cake to blow.'; }
 }
 
 function listen(){
   if(!analyser) return;
   analyser.getFloatTimeDomainData(data);
   const level = rms(data);
-  if(level > 0.08){           // blow threshold
-    flame = Math.max(0, flame - 0.12);
-  }
+  if(level > 0.08){ flame = Math.max(0, flame - 0.12); }
   requestAnimationFrame(listen);
 }
 
-// Click to reduce flame (fallback)
-canvas.addEventListener('click', ()=>{
-  flame = Math.max(0, flame - 0.2);
-});
+canvas.addEventListener('click', ()=>{ flame = Math.max(0, flame - 0.2); });
 
 relightBtn.addEventListener('click', ()=>{
   flame = 1.0; revealed = false;
   gallerySection.classList.add('hidden');
   hint.classList.add('hidden');
-  stopFireworks(); clearFireworks();
+  stopFireworks(); hardClearFireworks();
   window.scrollTo({top: 0, behavior: 'smooth'});
 });
 
-window.addEventListener('load', ()=>{
-  enableMic();
-  drawCake();
-  spawnDoves();
-});
+window.addEventListener('load', ()=>{ enableMic(); drawCake(); spawnDoves(); });
 
 // ------- Gallery + read-only wishes -------
 const memRoot = document.getElementById('memories');
 
 async function loadWishes(){
-  // Prefer XML
   try{
     const res = await fetch('assets/wishes.xml', {cache:'no-store'});
     if(res.ok){
@@ -170,9 +158,7 @@ async function loadWishes(){
         msg: (n.querySelector('msg')?.textContent || '').trim()
       }));
     }
-  }catch(e){ /* fall through */ }
-
-  // Fallback: line-based TXT => "who|message"
+  }catch(e){}
   try{
     const res = await fetch('assets/wishes.txt', {cache:'no-store'});
     if(res.ok){
@@ -182,9 +168,8 @@ async function loadWishes(){
         return { index: i, who: (who||'').trim(), msg: (msg||'').trim() };
       });
     }
-  }catch(e){ /* nothing */ }
-
-  return []; // none
+  }catch(e){}
+  return [];
 }
 
 function cardTemplate(idx, src, left, wish){
@@ -207,7 +192,7 @@ async function buildMemories(){
   const wishes = await loadWishes();
   const arr = cfg.PHOTOS.slice(0,10);
   arr.forEach((src, i)=>{
-    const leftImage = i % 2 === 0; // alternate left/right
+    const leftImage = i % 2 === 0;
     const w = wishes.find(w=> w.index === i) || wishes[i] || { who:'', msg:'' };
     memRoot.insertAdjacentHTML('beforeend', cardTemplate(i, src, leftImage, w));
   });
@@ -224,7 +209,7 @@ function revealGallery(){
   }, 350);
 }
 
-// -------- Fireworks system --------
+// -------- Fireworks system (with hard clear) --------
 let fwParticles = [];
 let fwRaf = 0;
 let fwRunning = false;
@@ -266,33 +251,17 @@ function stepFireworks(){
   const newList = [];
   for(const p of fwParticles){
     if(p.type === 'rocket'){
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.05;
+      p.x += p.vx; p.y += p.vy; p.vy += 0.05;
       drawParticle(p.x, p.y, p.hue, 2, 0.9);
-      // reach peak?
-      if(p.y < p.peak){
-        explode(p.x, p.y, p.hue);
-      }else{
-        newList.push(p);
-      }
-    }else{ // spark
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += g;
-      p.age++;
-      p.alpha = Math.max(0, 1 - p.age / p.life);
-      if(p.alpha > 0){
-        drawParticle(p.x, p.y, p.hue, 2, p.alpha);
-        newList.push(p);
-      }
+      if(p.y < p.peak){ explode(p.x, p.y, p.hue); } else { newList.push(p); }
+    }else{
+      p.x += p.vx; p.y += p.vy; p.vy += g; p.age++; p.alpha = Math.max(0, 1 - p.age / p.life);
+      if(p.alpha > 0){ drawParticle(p.x, p.y, p.hue, 2, p.alpha); newList.push(p); }
     }
   }
   fwParticles = newList;
 
-  // Occasionally launch rockets
   if(Math.random() < 0.2) fireRocket();
-
   if(fwRunning) fwRaf = requestAnimationFrame(stepFireworks);
 }
 
@@ -306,36 +275,32 @@ function drawParticle(x, y, hue, radius, alpha){
 function startFireworks(){
   if(fwRunning) return;
   fwRunning = true;
-  // Burst of initial rockets
+  fwCanvas.style.opacity = 1;
   for(let i=0;i<6;i++) fireRocket();
   fwRaf = requestAnimationFrame(stepFireworks);
-  // Auto-stop after 7 seconds
-  setTimeout(stopFireworks, 7000);
-}
-
-function startFireworks() {
-  if (fwRunning) return;
-  fwRunning = true;
-  fwCanvas.style.opacity = 1; // make visible
-  for (let i = 0; i < 6; i++) fireRocket();
-  fwRaf = requestAnimationFrame(stepFireworks);
-  setTimeout(() => {
+  setTimeout(()=>{
     stopFireworks();
-    // fade out + cleanup
-    fwCanvas.style.transition = "opacity 1s ease";
     fwCanvas.style.opacity = 0;
-    setTimeout(clearFireworks, 1000);
+    setTimeout(hardClearFireworks, 900);
   }, 7000);
 }
 
-function stopFireworks() {
+function stopFireworks(){
   fwRunning = false;
-  if (fwRaf) cancelAnimationFrame(fwRaf);
+  if(fwRaf) cancelAnimationFrame(fwRaf);
 }
 
-function clearFireworks() {
-  fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+// Reset transform to identity then wipe buffer, then restore DPR transform
+function hardClearFireworks(){
+  try{
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    fwCtx.setTransform(1,0,0,1,0,0);
+    fwCtx.globalCompositeOperation = 'copy';
+    fwCtx.fillStyle = 'rgba(0,0,0,0)';
+    fwCtx.fillRect(0,0,fwCanvas.width,fwCanvas.height);
+    fwCtx.setTransform(dpr,0,0,dpr,0,0);
+  }catch(e){
+    sizeFireworks();
+  }
   fwParticles.length = 0;
-  fwCanvas.style.transition = "";
-  fwCanvas.style.opacity = 1; // reset for next salute
 }

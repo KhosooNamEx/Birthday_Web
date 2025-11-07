@@ -1,19 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500">
-  <defs>
-    <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#eff3ff"/>
-    </linearGradient>
-  </defs>
+  <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eff3ff"/></linearGradient></defs>
   <rect width="1200" height="500" fill="url(#g)"/>
-  <g transform="translate(600,220)">
-    <text text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="72" fill="#1b1e2b" font-weight="800">
-      Happy Birthday
-    </text>
-  </g>
-  <g transform="translate(600,320)">
-    <text text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="54" fill="#2a71ff" font-weight="700">
-      Michuka
-    </text>
-  </g>
+  <g transform="translate(600,220)"><text text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="72" fill="#1b1e2b" font-weight="800">Happy Birthday</text></g>
+  <g transform="translate(600,320)"><text text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="54" fill="#2a71ff" font-weight="700">Michuka</text></g>
 </svg>
