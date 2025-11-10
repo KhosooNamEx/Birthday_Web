@@ -19,7 +19,25 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-s
 .mem-card{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;box-shadow:var(--shadow)}
 .mem-card:nth-child(odd) .mem-img{order:1}.mem-card:nth-child(odd) .mem-wish{order:2}
 .mem-card:nth-child(even) .mem-img{order:2}.mem-card:nth-child(even) .mem-wish{order:1}
-.mem-img img{width:100%;height:320px;object-fit:cover;border-radius:12px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.mem-img{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.mem-img img{
+  width:auto;                /* use the image’s intrinsic width */
+  max-width:100%;            /* but don’t overflow the card horizontally */
+  height:auto;               /* keep aspect ratio */
+  max-height: min(80vh, 640px); /* keep it visible on screen */
+  object-fit: contain;       /* no crop */
+  border-radius:12px;
+  border:1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+/* mobile tweak */
+@media (max-width: 900px){
+  .mem-img img{ max-height: 60vh; }
+}
 .mem-wish .wish-text{white-space:pre-wrap;line-height:1.55}.mem-wish .who{margin-top:6px;color:var(--muted);font-size:.9rem}
 .small{font-size:.9rem;color:var(--muted)}.bullets{color:var(--muted)}
 @media (max-width:900px){.mem-card{grid-template-columns:1fr}.mem-img img{height:240px}}
